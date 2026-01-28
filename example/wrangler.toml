@@ -1,0 +1,16 @@
+name = "example-orchestrator"
+main = "src/worker.ts"
+compatibility_date = "2026-01-01"
+
+[durable_objects]
+bindings = [
+  { name = "SERVICE_OPERATOR", class_name = "ServiceOperator" },
+  { name = "MANAGED_SERVICE", class_name = "APIService" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ServiceOperator", "APIService"]
+
+[vars]
+API_SECRET = "dev-secret-key"

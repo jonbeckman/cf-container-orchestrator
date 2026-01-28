@@ -15,134 +15,16 @@ A generic Cloudflare Containers operator with fleet management, restart policies
 pnpm add @jonbeckman/cf-container-orchestrator
 ```
 
-## Quick Start
+## Use Case
 
-### 1. Create Your Container
+I built this for my own use case of running a replication set of services, each with their own configuration and lifecycle management requirements.
 
-Extend `ManagedContainer` to create your container Durable Object:
+In practice, that means:
+- High Availability: Enforcing a "baseline fleet" of services that must always be running (with automatic restarts and crash-loop protection).
+- Dynamic Configuration: Injecting specific secrets and configuration into each container instance at runtime.
+- Lifecycle Management: Starting, stopping, and restarting containers as needed. I wrapped this into an API to call remotely.
 
-```typescript
-import { ManagedContainer, type ManagedContainerConfig } from "@jonbeckman/cf-container-orchestrator"
-import type { StopParams } from "@cloudflare/containers"
-
-interface MyContainerEnv {
-  CONTAINER_OPERATOR: DurableObjectNamespace<any>
-  MY_CONTAINER: DurableObjectNamespace<MyContainer>
-  API_KEY: string
-}
-
-export class MyContainer extends ManagedContainer<MyContainerEnv> {
-  defaultPort = 8080
-  sleepAfter = "30m"
-
-  // Configure container name extraction
-  protected override getManagedContainerConfig(): ManagedContainerConfig {
-    return {
-      containerNameEnvKey: "CONTAINER_NAME",
-      operatorName: "global",
-    }
-  }
-
-  // Optional: Custom lifecycle hooks
-  protected override async onContainerStart(): Promise<void> {
-    console.log("Container started!")
-  }
-
-  protected override async onContainerStop(params: StopParams): Promise<void> {
-    console.log(`Container stopped with exit code: ${params.exitCode}`)
-  }
-}
-```
-
-### 2. Create Your Operator
-
-Use `createContainerOperator` to create an operator configured for your containers:
-
-```typescript
-import {
-  createContainerOperator,
-  type ContainerOperatorEnv,
-  type ContainerSpec,
-  defaultRestartPolicy,
-} from "@jonbeckman/cf-container-orchestrator"
-
-interface MyContainerConfig {
-  strategy: string
-}
-
-interface MyOperatorEnv extends ContainerOperatorEnv {
-  MY_CONTAINER: DurableObjectNamespace<MyContainer>
-  API_KEY: string
-}
-
-// Define your baseline fleet
-const baselineFleet: ContainerSpec[] = [
-  {
-    name: "default",
-    config: { strategy: "MyStrategy" } satisfies MyContainerConfig,
-    restartPolicy: defaultRestartPolicy(),
-  },
-]
-
-// Build environment variables for containers
-const envVarsBuilder = (spec: ContainerSpec, env: MyOperatorEnv) => {
-  const config = spec.config as unknown as MyContainerConfig
-  return {
-    STRATEGY: config.strategy,
-    API_KEY: env.API_KEY,
-  }
-}
-
-// Create the operator class
-export const MyContainerOperator = createContainerOperator<MyOperatorEnv>({
-  baselineFleet,
-  envVarsBuilder,
-  containerNameEnvKey: "CONTAINER_NAME",
-  reconcileIntervalMs: 60_000, // Reconcile every minute
-  allowAdHocContainers: true,
-})
-```
-
-### 3. Configure Wrangler
-
-Add the Durable Objects to your `wrangler.toml`:
-
-```toml
-[durable_objects]
-bindings = [
-  { name = "MY_CONTAINER", class_name = "MyContainer" },
-  { name = "CONTAINER_OPERATOR", class_name = "MyContainerOperator" },
-  { name = "MANAGED_CONTAINER", class_name = "MyContainer" }
-]
-```
-
-### 4. Use the Operator
-
-Call operator methods via RPC:
-
-```typescript
-// In your Worker
-export default {
-  async fetch(request: Request, env: Env) {
-    const operatorId = env.CONTAINER_OPERATOR.idFromName("global")
-    const operator = env.CONTAINER_OPERATOR.get(operatorId)
-
-    // Start a container
-    await operator.startContainer({
-      name: "my-container",
-      config: { strategy: "MyStrategy" },
-    })
-
-    // List all containers
-    const containers = await operator.listContainers()
-
-    // Stop a container
-    await operator.stopContainer("my-container")
-
-    return new Response(JSON.stringify(containers))
-  }
-}
-```
+For a complete guide on how to integrate and use the library, check out the [Example Guide](./example/README.md).
 
 ## API Reference
 
