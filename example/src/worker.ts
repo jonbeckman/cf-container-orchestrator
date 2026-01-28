@@ -1,5 +1,5 @@
-import { ServiceOperator } from "./operator"
 import { APIService } from "./container"
+import { ServiceOperator } from "./operator"
 import type { ServiceEnv } from "./types"
 
 export { ServiceOperator, APIService }
