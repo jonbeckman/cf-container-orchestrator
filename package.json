@@ -1,0 +1,54 @@
+{
+	"name": "@jonbeckman/cf-container-orchestrator",
+	"version": "0.1.0",
+	"description": "Orchestrate Cloudflare Containers with fleet management, restart policies, and crash loop protection with a type-safe operator built on Effect-TS.",
+	"type": "module",
+	"files": [
+		"src",
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"imports": {
+		"@/*": "./src/*"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./config": "./src/config/index.ts",
+		"./errors": "./src/errors/index.ts",
+		"./types": "./src/types/index.ts"
+	},
+	"scripts": {
+		"build": "tsc --build",
+		"typecheck": "tsc --noEmit",
+		"format": "biome check . --write"
+	},
+	"keywords": [
+		"cloudflare",
+		"workers",
+		"containers",
+		"durable-objects",
+		"effect",
+		"operator"
+	],
+	"author": "Jonathan Beckman <jonathantbeckman@gmail.com>",
+	"license": "MIT",
+	"engines": {
+		"node": ">=24.13.0",
+		"pnpm": ">=10.0.0"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "^0.0.31",
+		"effect": "^3.19.14"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.11",
+		"@cloudflare/workers-types": "^4.20260103.0",
+		"@types/node": "^22.19.3",
+		"typescript": "^5.9.3"
+	},
+	"peerDependencies": {
+		"@cloudflare/containers": ">=0.1.0",
+		"effect": ">=3.0.0"
+	}
+}
