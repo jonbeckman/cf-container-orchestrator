@@ -1,3 +1,10 @@
+# 1.0.0 (2026-01-29)
+
+
+### Bug Fixes
+
+* updated dependencies. Refined example and docs. ([f7a8ae0](https://github.com/jonbeckman/cf-container-orchestrator/commit/f7a8ae0ca3b8be3f55fda2cb03c4ddea5b03e50b))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

@@ -1,6 +1,6 @@
 {
   "name": "@jonbeckman/cf-container-orchestrator",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Orchestrate Cloudflare Containers with fleet management, restart policies, and crash loop protection with a type-safe operator built on Effect-TS.",
   "keywords": [
     "cloudflare",
