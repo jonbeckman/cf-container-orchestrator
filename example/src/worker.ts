@@ -1,11 +1,11 @@
 import { APIService } from "./container"
 import { ServiceOperator } from "./operator"
-import type { ServiceEnv } from "./types"
+import type { WorkerApiEnv } from "./types"
 
 export { ServiceOperator, APIService }
 
 export default {
-  async fetch(request: Request, env: ServiceEnv): Promise<Response> {
+  async fetch(request: Request, env: WorkerApiEnv): Promise<Response> {
     const url = new URL(request.url)
     const operatorId = env.SERVICE_OPERATOR.idFromName("global-operator")
     const operator = env.SERVICE_OPERATOR.get(operatorId)
@@ -26,7 +26,7 @@ export default {
     if (url.pathname.startsWith("/start/")) {
       // Start an ad-hoc service dynamically
       const name = url.pathname.split("/")[2]
-      
+
       let customConfig = {}
       try {
         if (request.headers.get("content-type")?.includes("application/json")) {
@@ -47,7 +47,7 @@ export default {
       })
       return Response.json({ status: "started", name })
     }
-    
+
     if (url.pathname.startsWith("/stop/")) {
       // Stop a service
       const name = url.pathname.split("/")[2]
@@ -55,6 +55,9 @@ export default {
       return Response.json({ status: "stopped", name })
     }
 
-    return new Response("Service Orchestrator API\nGET /services\nPOST /reconcile\nGET /start/:name\nGET /stop/:name", { status: 200 })
+    return new Response(
+      "Service Orchestrator API\nGET /services\nPOST /reconcile\nGET /start/:name\nGET /stop/:name",
+      { status: 200 },
+    )
   },
 }

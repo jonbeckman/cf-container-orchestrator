@@ -5,15 +5,11 @@
  * Ensures all baseline containers match their desired state.
  */
 
-import { Context, Effect } from "effect";
-import type { BaselineFleetConfig } from "../config/BaselineFleetConfig";
-import {
-	PartialReconcileError,
-	ReconcileError,
-} from "../errors/ReconcileErrors";
-import type { ManagedContainerEnv } from "../ManagedContainer";
-import type { ContainerRecord } from "../types/ContainerRecord";
-import type { ContainerService } from "./ContainerService";
+import { Context, Effect } from "effect"
+import type { BaselineFleetConfig } from "../config/BaselineFleetConfig"
+import { PartialReconcileError, ReconcileError } from "../errors/ReconcileErrors"
+import type { ContainerRecord } from "../types/ContainerRecord"
+import type { ContainerService } from "./ContainerService"
 
 // ============================================================================
 // Service Interface
@@ -22,46 +18,43 @@ import type { ContainerService } from "./ContainerService";
 /**
  * Context required by ReconcileService.
  */
-export interface ReconcileServiceContext<TEnv extends ManagedContainerEnv> {
-	/** Container service for operations */
-	containerService: ContainerService<TEnv>;
-	/** Baseline fleet configuration */
-	baselineFleet: BaselineFleetConfig;
-	/** Container registry */
-	containers: Map<string, ContainerRecord>;
-	/** Save containers to storage */
-	saveContainers: () => Promise<void>;
+export interface ReconcileServiceContext {
+  /** Container service for operations */
+  containerService: ContainerService
+  /** Baseline fleet configuration */
+  baselineFleet: BaselineFleetConfig
+  /** Container registry */
+  containers: Map<string, ContainerRecord>
+  /** Save containers to storage */
+  saveContainers: () => Promise<void>
 }
 
 /**
  * Result of a reconciliation run.
  */
 export interface ReconcileResult {
-	/** Number of containers that were already in desired state */
-	alreadyHealthy: number;
-	/** Number of containers that were started */
-	started: number;
-	/** Containers that failed to start */
-	failed: Array<{ name: string; error: unknown }>;
+  /** Number of containers that were already in desired state */
+  alreadyHealthy: number
+  /** Number of containers that were started */
+  started: number
+  /** Containers that failed to start */
+  failed: Array<{ name: string; error: unknown }>
 }
 
 /**
  * ReconcileService interface.
  */
 export interface ReconcileService {
-	/**
-	 * Reconcile baseline fleet.
-	 * Ensures all baseline containers are running and healthy.
-	 */
-	reconcile(): Effect.Effect<
-		ReconcileResult,
-		ReconcileError | PartialReconcileError
-	>;
+  /**
+   * Reconcile baseline fleet.
+   * Ensures all baseline containers are running and healthy.
+   */
+  reconcile(): Effect.Effect<ReconcileResult, ReconcileError | PartialReconcileError>
 
-	/**
-	 * Check if reconciliation is needed.
-	 */
-	needsReconcile(): Effect.Effect<boolean, never>;
+  /**
+   * Check if reconciliation is needed.
+   */
+  needsReconcile(): Effect.Effect<boolean, never>
 }
 
 // ============================================================================
@@ -69,8 +62,8 @@ export interface ReconcileService {
 // ============================================================================
 
 export class ReconcileServiceTag extends Context.Tag("ReconcileService")<
-	ReconcileServiceTag,
-	ReconcileService
+  ReconcileServiceTag,
+  ReconcileService
 >() {}
 
 // ============================================================================
@@ -80,130 +73,113 @@ export class ReconcileServiceTag extends Context.Tag("ReconcileService")<
 /**
  * Create ReconcileService implementation.
  */
-export const makeReconcileService = <TEnv extends ManagedContainerEnv>(
-	ctx: ReconcileServiceContext<TEnv>,
-): ReconcileService => {
-	const { containerService, baselineFleet, containers, saveContainers } = ctx;
+export const makeReconcileService = (ctx: ReconcileServiceContext): ReconcileService => {
+  const { containerService, baselineFleet, containers } = ctx
 
-	return {
-		reconcile: () =>
-			Effect.gen(function* () {
-				console.log(
-					`[ReconcileService] Starting reconciliation for ${baselineFleet.length} baseline containers`,
-				);
+  return {
+    reconcile: () =>
+      Effect.gen(function* () {
+        console.log(
+          `[ReconcileService] Starting reconciliation for ${baselineFleet.length} baseline containers`,
+        )
 
-				const result: ReconcileResult = {
-					alreadyHealthy: 0,
-					started: 0,
-					failed: [],
-				};
+        const result: ReconcileResult = {
+          alreadyHealthy: 0,
+          started: 0,
+          failed: [],
+        }
 
-				// Process each baseline container
-				for (const spec of baselineFleet) {
-					const record = containers.get(spec.name);
+        // Process each baseline container
+        for (const spec of baselineFleet) {
+          const record = containers.get(spec.name)
 
-					// Check if container exists and is healthy
-					const liveState = yield* containerService.getLiveState(spec.name);
-					const isHealthy = liveState?.status === "healthy";
+          // Check if container exists and is healthy
+          const liveState = yield* containerService.getLiveState(spec.name)
+          const isHealthy = liveState?.status === "healthy"
 
-					if (isHealthy) {
-						console.log(`[ReconcileService] Container ${spec.name} is healthy`);
-						result.alreadyHealthy++;
-						continue;
-					}
+          if (isHealthy) {
+            console.log(`[ReconcileService] Container ${spec.name} is healthy`)
+            result.alreadyHealthy++
+            continue
+          }
 
-					// Check if in crash loop
-					if (record && containerService.isCrashLooping(record)) {
-						console.log(
-							`[ReconcileService] Container ${spec.name} is in crash loop, skipping`,
-						);
-						result.failed.push({
-							name: spec.name,
-							error: "Container is in crash loop",
-						});
-						continue;
-					}
+          // Check if in crash loop
+          if (record && containerService.isCrashLooping(record)) {
+            console.log(`[ReconcileService] Container ${spec.name} is in crash loop, skipping`)
+            result.failed.push({
+              name: spec.name,
+              error: "Container is in crash loop",
+            })
+            continue
+          }
 
-					// Check if desired state is stopped (user explicitly stopped it)
-					if (record?.desiredState === "stopped") {
-						console.log(
-							`[ReconcileService] Container ${spec.name} desiredState=stopped, skipping`,
-						);
-						continue;
-					}
+          // Check if desired state is stopped (user explicitly stopped it)
+          if (record?.desiredState === "stopped") {
+            console.log(`[ReconcileService] Container ${spec.name} desiredState=stopped, skipping`)
+            continue
+          }
 
-					// Start or restart the container
-					console.log(`[ReconcileService] Starting container ${spec.name}`);
-					const startResult = yield* containerService
-						.start(spec.name, spec.config, spec.restartPolicy, false)
-						.pipe(
-							Effect.map(() => ({ success: true as const })),
-							Effect.catchAll((err) =>
-								Effect.succeed({ success: false as const, error: err }),
-							),
-						);
+          // Start or restart the container
+          console.log(`[ReconcileService] Starting container ${spec.name}`)
+          const startResult = yield* containerService
+            .start(spec.name, spec.config, spec.restartPolicy, false)
+            .pipe(
+              Effect.map(() => ({ success: true as const })),
+              Effect.catchAll((err) => Effect.succeed({ success: false as const, error: err })),
+            )
 
-					if (startResult.success) {
-						result.started++;
-					} else {
-						result.failed.push({ name: spec.name, error: startResult.error });
-					}
-				}
+          if (startResult.success) {
+            result.started++
+          } else {
+            result.failed.push({ name: spec.name, error: startResult.error })
+          }
+        }
 
-				console.log(
-					`[ReconcileService] Reconciliation complete: ` +
-						`${result.alreadyHealthy} healthy, ${result.started} started, ${result.failed.length} failed`,
-				);
+        console.log(
+          `[ReconcileService] Reconciliation complete: ` +
+            `${result.alreadyHealthy} healthy, ${result.started} started, ${result.failed.length} failed`,
+        )
 
-				// Report partial failures
-				if (result.failed.length > 0 && result.started > 0) {
-					return yield* Effect.fail(
-						PartialReconcileError.of(
-							result.failed,
-							result.alreadyHealthy + result.started,
-						),
-					);
-				}
+        // Report partial failures
+        if (result.failed.length > 0 && result.started > 0) {
+          return yield* Effect.fail(
+            PartialReconcileError.of(result.failed, result.alreadyHealthy + result.started),
+          )
+        }
 
-				// Report complete failure
-				if (
-					result.failed.length > 0 &&
-					result.started === 0 &&
-					result.alreadyHealthy === 0
-				) {
-					return yield* Effect.fail(
-						ReconcileError.of(
-							`All ${result.failed.length} baseline containers failed to start`,
-						),
-					);
-				}
+        // Report complete failure
+        if (result.failed.length > 0 && result.started === 0 && result.alreadyHealthy === 0) {
+          return yield* Effect.fail(
+            ReconcileError.of(`All ${result.failed.length} baseline containers failed to start`),
+          )
+        }
 
-				return result;
-			}),
+        return result
+      }),
 
-		needsReconcile: () =>
-			Effect.gen(function* () {
-				for (const spec of baselineFleet) {
-					const record = containers.get(spec.name);
+    needsReconcile: () =>
+      Effect.gen(function* () {
+        for (const spec of baselineFleet) {
+          const record = containers.get(spec.name)
 
-					// Skip if user explicitly stopped it
-					if (record?.desiredState === "stopped") {
-						continue;
-					}
+          // Skip if user explicitly stopped it
+          if (record?.desiredState === "stopped") {
+            continue
+          }
 
-					// Skip if in crash loop
-					if (record && containerService.isCrashLooping(record)) {
-						continue;
-					}
+          // Skip if in crash loop
+          if (record && containerService.isCrashLooping(record)) {
+            continue
+          }
 
-					// Check if healthy
-					const liveState = yield* containerService.getLiveState(spec.name);
-					if (liveState?.status !== "healthy") {
-						return true;
-					}
-				}
+          // Check if healthy
+          const liveState = yield* containerService.getLiveState(spec.name)
+          if (liveState?.status !== "healthy") {
+            return true
+          }
+        }
 
-				return false;
-			}),
-	};
-};
+        return false
+      }),
+  }
+}

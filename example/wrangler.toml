@@ -5,7 +5,7 @@ compatibility_date = "2026-01-01"
 [durable_objects]
 bindings = [
   { name = "SERVICE_OPERATOR", class_name = "ServiceOperator" },
-  { name = "MANAGED_SERVICE", class_name = "APIService" }
+  { name = "MANAGED_SERVICE", class_name = "APIService" },
 ]
 
 [[migrations]]

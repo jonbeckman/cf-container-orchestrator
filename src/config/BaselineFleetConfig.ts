@@ -5,8 +5,8 @@
  * These containers are reconciled on startup and via periodic alarms.
  */
 
-import { Schema } from "effect";
-import { defaultRestartPolicy, RestartPolicy } from "./RestartPolicy";
+import { Schema } from "effect"
+import { defaultRestartPolicy, RestartPolicy } from "./RestartPolicy"
 
 // ============================================================================
 // Schemas
@@ -17,29 +17,29 @@ import { defaultRestartPolicy, RestartPolicy } from "./RestartPolicy";
  * This is passed to the envVarsBuilder function to generate container env vars.
  */
 export const ContainerUserConfig = Schema.Record({
-	key: Schema.String,
-	value: Schema.Unknown,
-});
-export type ContainerUserConfig = typeof ContainerUserConfig.Type;
+  key: Schema.String,
+  value: Schema.Unknown,
+})
+export type ContainerUserConfig = typeof ContainerUserConfig.Type
 
 /**
  * Specification for a single container in the baseline fleet.
  */
 export const ContainerSpec = Schema.Struct({
-	/** Unique name for this container (used as DO ID) */
-	name: Schema.String.pipe(Schema.nonEmptyString()),
-	/** User-defined configuration passed to envVarsBuilder */
-	config: ContainerUserConfig,
-	/** Restart policy for this container */
-	restartPolicy: RestartPolicy,
-});
-export type ContainerSpec = typeof ContainerSpec.Type;
+  /** Unique name for this container (used as DO ID) */
+  name: Schema.String.pipe(Schema.nonEmptyString()),
+  /** User-defined configuration passed to envVarsBuilder */
+  config: ContainerUserConfig,
+  /** Restart policy for this container */
+  restartPolicy: RestartPolicy,
+})
+export type ContainerSpec = typeof ContainerSpec.Type
 
 /**
  * Array of container specifications forming the baseline fleet.
  */
-export const BaselineFleetConfig = Schema.Array(ContainerSpec);
-export type BaselineFleetConfig = typeof BaselineFleetConfig.Type;
+export const BaselineFleetConfig = Schema.Array(ContainerSpec)
+export type BaselineFleetConfig = typeof BaselineFleetConfig.Type
 
 // ============================================================================
 // Helpers
@@ -49,11 +49,11 @@ export type BaselineFleetConfig = typeof BaselineFleetConfig.Type;
  * Create a container spec with default restart policy.
  */
 export const createContainerSpec = (
-	name: string,
-	config: ContainerUserConfig = {},
-	restartPolicy: RestartPolicy = defaultRestartPolicy(),
+  name: string,
+  config: ContainerUserConfig = {},
+  restartPolicy: RestartPolicy = defaultRestartPolicy(),
 ): ContainerSpec => ({
-	name,
-	config,
-	restartPolicy,
-});
+  name,
+  config,
+  restartPolicy,
+})

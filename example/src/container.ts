@@ -1,14 +1,18 @@
-import { ManagedContainer, type ManagedContainerConfig } from "@jonbeckman/cf-container-orchestrator"
 import type { StopParams } from "@cloudflare/containers"
-import { type ServiceEnv, type ServiceConfig, DEFAULT_SERVICE_CONFIG } from "./types"
+import {
+  ManagedContainer,
+  type ManagedContainerConfig,
+} from "@jonbeckman/cf-container-orchestrator"
+import { DEFAULT_SERVICE_CONFIG, type ServiceConfig, type ServiceEnv } from "./types"
 
 export class APIService extends ManagedContainer<ServiceEnv> {
-  // Standard DO config
+  // Standard Container DO config
   defaultPort = 8080
   sleepAfter = "30m" // Keep alive for 30m after last request
 
   // State to demonstrate configuration usage
   private config: ServiceConfig = { ...DEFAULT_SERVICE_CONFIG }
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: This is just an example
   private requestCount = 0
 
   /**
@@ -28,7 +32,9 @@ export class APIService extends ManagedContainer<ServiceEnv> {
    */
   protected override async onContainerStart(): Promise<void> {
     this.loadConfigFromEnv()
-    console.log(`[${this.config.serviceName}] Service started in ${this.config.mode} mode.`)
+    console.log(
+      `[${this.config.serviceName}] Service started with ${this.config.maxConnections} max connections.`,
+    )
   }
 
   /**
@@ -48,12 +54,8 @@ export class APIService extends ManagedContainer<ServiceEnv> {
   /**
    * Custom business logic method (RPC accessible)
    */
-  async processRequest(data: unknown): Promise<{ status: string; processed: boolean }> {
+  async processRequest(): Promise<{ status: string; processed: boolean }> {
     this.requestCount++
-    
-    if (this.config.mode === "passive") {
-      return { status: "skipped (passive mode)", processed: false }
-    }
 
     // Simulate processing
     return { status: "processed", processed: true }
@@ -63,14 +65,11 @@ export class APIService extends ManagedContainer<ServiceEnv> {
    * Helper to parse env vars into typed config
    */
   private loadConfigFromEnv() {
-    // In a real app, use a validation library like Zod
-    const env = this.ctx.env as unknown as Record<string, string>
-    
     this.config = {
-      serviceName: env.SERVICE_NAME || "unknown",
-      mode: (env.SERVICE_MODE as ServiceConfig["mode"]) || DEFAULT_SERVICE_CONFIG.mode,
-      logLevel: (env.LOG_LEVEL as ServiceConfig["logLevel"]) || DEFAULT_SERVICE_CONFIG.logLevel,
-      maxConnections: Number(env.MAX_CONNECTIONS) || DEFAULT_SERVICE_CONFIG.maxConnections,
+      serviceName: this.env.SERVICE_NAME || "unknown",
+      logLevel:
+        (this.env.LOG_LEVEL as ServiceConfig["logLevel"]) || DEFAULT_SERVICE_CONFIG.logLevel,
+      maxConnections: Number(this.env.MAX_CONNECTIONS) || DEFAULT_SERVICE_CONFIG.maxConnections,
     }
   }
 }

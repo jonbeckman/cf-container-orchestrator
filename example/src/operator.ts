@@ -14,7 +14,7 @@ interface OperatorEnv extends ContainerOperatorEnv, ServiceEnv {}
  * These containers will be automatically started and monitored.
  */
 const baselineFleet: ContainerSpec[] = [
-  // 1. Primary Service - Uses mostly defaults
+  // Example 1: Uses mostly defaults
   {
     name: "core-processor-1",
     config: {
@@ -24,7 +24,7 @@ const baselineFleet: ContainerSpec[] = [
     restartPolicy: defaultRestartPolicy(),
   },
 
-  // 2. Secondary Service - Overrides logging config
+  // Example 2: Overrides logging config
   {
     name: "core-processor-2",
     config: {
@@ -34,7 +34,7 @@ const baselineFleet: ContainerSpec[] = [
     restartPolicy: defaultRestartPolicy(),
   },
 
-  // 3. Backup Service - Custom restart policy
+  // Example 3: Custom restart policy
   {
     name: "backup-processor",
     config: {
@@ -47,7 +47,7 @@ const baselineFleet: ContainerSpec[] = [
         windowMs: 30_000,
         allowedCrashes: 5,
       },
-    }
+    },
   },
 ]
 
@@ -56,14 +56,17 @@ const baselineFleet: ContainerSpec[] = [
  * This is how config is passed to the Durable Objects.
  */
 const envVarsBuilder = (spec: ContainerSpec, env: OperatorEnv) => {
-  const config = { ...DEFAULT_SERVICE_CONFIG, ...(spec.config as Partial<ServiceConfig>) }
-  
+  const config = {
+    ...DEFAULT_SERVICE_CONFIG,
+    ...(spec.config as Partial<ServiceConfig>),
+  }
+
   return {
     // Config mapped to Env Vars
     SERVICE_NAME: spec.name,
     LOG_LEVEL: config.logLevel,
     MAX_CONNECTIONS: config.maxConnections.toString(),
-    
+
     // Pass through shared secrets/bindings if needed
     API_SECRET: env.API_SECRET,
   }
@@ -77,5 +80,5 @@ export const ServiceOperator = createContainerOperator<OperatorEnv>({
   envVarsBuilder,
   containerNameEnvKey: "SERVICE_NAME",
   reconcileIntervalMs: 60_000, // Check fleet health every 60 seconds
-  allowAdHocContainers: true,  // Allow starting temporary/dynamic containers via API
+  allowAdHocContainers: true, // Allow starting temporary/dynamic containers via API
 })
