@@ -2,7 +2,7 @@
  * Container Operator Durable Object
  *
  * Generic operator that manages multiple container instances with:
- * - Configurable baseline fleet with auto-reconciliation
+ * - Configurable min replica set with auto-reconciliation
  * - Restart policies with crash loop protection
  * - Lifecycle event handling from containers
  * - Alarm-based periodic reconciliation
@@ -61,7 +61,7 @@ export interface ContainerOperatorEnv extends ManagedContainerEnv<ContainerOpera
  * @example
  * ```typescript
  * export const ContainerOperator = createContainerOperator({
- *   baselineFleet: [
+ *   minReplicaSet: [
  *     { name: "default", config: { strategy: "MyStrategy" }, restartPolicy: defaultRestartPolicy() }
  *   ],
  *   envVarsBuilder: (spec, env) => ({
@@ -134,8 +134,8 @@ export function createContainerOperator<TEnv extends ContainerOperatorEnv>(
           this.#containers = new Map(containerFleet)
         }
 
-        // Initialize baseline containers that don't exist yet
-        for (const spec of this.#config.baselineFleet) {
+        // Initialize min replica set containers that don't exist yet
+        for (const spec of this.#config.minReplicaSet) {
           if (!this.#containers.has(spec.name)) {
             this.#containers.set(spec.name, {
               name: spec.name,
@@ -144,15 +144,15 @@ export function createContainerOperator<TEnv extends ContainerOperatorEnv>(
               desiredState: "running",
               updatedAt: Date.now(),
               stopHistory: [],
-              isBaseline: true,
+              isMinReplicaSet: true,
             })
           } else {
-            // Mark existing containers as baseline
+            // Mark existing containers as min replica set
             const record = this.#containers.get(spec.name)
             if (!record) {
               throw new Error(`Container record not found for ${spec.name}`)
             }
-            record.isBaseline = true
+            record.isMinReplicaSet = true
           }
         }
 
@@ -199,7 +199,7 @@ export function createContainerOperator<TEnv extends ContainerOperatorEnv>(
 
       this.#reconcileService = makeReconcileService({
         containerService: this.#containerService,
-        baselineFleet: this.#config.baselineFleet,
+        minReplicaSet: this.#config.minReplicaSet,
         containers: this.#containers,
         saveContainers,
       })
@@ -354,7 +354,7 @@ export function createContainerOperator<TEnv extends ContainerOperatorEnv>(
      */
     getConfig(): Omit<ResolvedOperatorConfig<TEnv>, "envVarsBuilder"> {
       return {
-        baselineFleet: this.#config.baselineFleet,
+        minReplicaSet: this.#config.minReplicaSet,
         containerNameEnvKey: this.#config.containerNameEnvKey,
         reconcileIntervalMs: this.#config.reconcileIntervalMs,
         allowAdHocContainers: this.#config.allowAdHocContainers,

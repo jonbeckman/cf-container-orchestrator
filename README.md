@@ -4,7 +4,7 @@ A generic Cloudflare Containers operator with fleet management, restart policies
 
 ## Features
 
-- **Baseline Fleet Management**: Define containers that should always be running, with automatic reconciliation
+- **Min Replica Set Management**: Define containers that should always be running, with automatic reconciliation
 - **Restart Policies**: Configure when containers should restart (`always`, `on_failure`, `never`)
 - **Crash Loop Protection**: Automatically detect and prevent crash loops
 - **Lifecycle Events**: Containers report start/stop/error events to the operator
@@ -21,7 +21,7 @@ I built this for my own use case of running a replication set of services, each 
 
 In practice, that means:
 
-- High Availability: Enforcing a "baseline fleet" of services that must always be running (with automatic restarts and crash-loop protection).
+- High Availability: Enforcing a "min replica set" of services that must always be running (with automatic restarts and crash-loop protection).
 - Dynamic Configuration: Injecting specific secrets and configuration into each container instance at runtime.
 - Lifecycle Management: Starting, stopping, and restarting containers as needed. I wrapped this into an API to call remotely.
 
@@ -58,11 +58,11 @@ Factory function to create an operator class.
 
 | Option                 | Type                                    | Default            | Description                            |
 | ---------------------- | --------------------------------------- | ------------------ | -------------------------------------- |
-| `baselineFleet`        | `ContainerSpec[]`                       | `[]`               | Containers to auto-manage              |
+| `minReplicaSet`        | `ContainerSpec[]`                       | `[]`               | Containers to auto-manage              |
 | `envVarsBuilder`       | `(spec, env) => Record<string, string>` | Required           | Builds env vars for containers         |
 | `containerNameEnvKey`  | `string`                                | `"CONTAINER_NAME"` | Env var key for container name         |
 | `reconcileIntervalMs`  | `number`                                | `60000`            | Reconciliation interval (0 to disable) |
-| `allowAdHocContainers` | `boolean`                               | `true`             | Allow non-baseline containers          |
+| `allowAdHocContainers` | `boolean`                               | `true`             | Allow non-min replica set containers   |
 
 ### Operator Methods
 
@@ -115,7 +115,7 @@ import {
   ContainerNotFoundError,
   CrashLoopDetectedError,
   ContainerNotStoppedError,
-  BaselineContainerError,
+  MinReplicaSetContainerError,
 } from "@jonbeckman/cf-container-orchestrator"
 
 // Errors have static factory methods

@@ -3,11 +3,11 @@
  */
 
 export {
-  BaselineFleetConfig,
+  MinReplicaSetConfig,
   ContainerSpec,
   ContainerUserConfig,
   createContainerSpec,
-} from "./BaselineFleetConfig"
+} from "./MinReplicaSetConfig"
 export {
   type ContainerStartConfig,
   DEFAULT_CONTAINER_NAME_ENV_KEY,

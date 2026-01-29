@@ -12,7 +12,7 @@ import type { RestartPolicy } from "../config/RestartPolicy"
 import { defaultRestartPolicy } from "../config/RestartPolicy"
 import {
   AdHocContainerNotAllowedError,
-  BaselineContainerError,
+  MinReplicaSetContainerError,
   ContainerNotFoundError,
   ContainerNotStoppedError,
   ContainerStartError,
@@ -82,7 +82,10 @@ export interface ContainerService {
    */
   remove(
     name: string,
-  ): Effect.Effect<void, ContainerNotFoundError | ContainerNotStoppedError | BaselineContainerError>
+  ): Effect.Effect<
+    void,
+    ContainerNotFoundError | ContainerNotStoppedError | MinReplicaSetContainerError
+  >
 
   /**
    * Clear crash history for a container.
@@ -170,10 +173,10 @@ export const makeContainerService = <TEnv extends ManagedContainerEnv<ContainerO
   })
 
   /**
-   * Check if container name is in baseline fleet.
+   * Check if container name is in min replica set.
    */
-  const isBaselineContainer = (name: string): boolean =>
-    config.baselineFleet.some((spec) => spec.name === name)
+  const isMinReplicaSetContainer = (name: string): boolean =>
+    config.minReplicaSet.some((spec) => spec.name === name)
 
   /**
    * Get container DO stub.
@@ -204,7 +207,7 @@ export const makeContainerService = <TEnv extends ManagedContainerEnv<ContainerO
     ) =>
       Effect.gen(function* () {
         // Check if ad-hoc containers are allowed
-        if (!config.allowAdHocContainers && !isBaselineContainer(name)) {
+        if (!config.allowAdHocContainers && !isMinReplicaSetContainer(name)) {
           return yield* Effect.fail(AdHocContainerNotAllowedError.of(name))
         }
 
@@ -218,7 +221,7 @@ export const makeContainerService = <TEnv extends ManagedContainerEnv<ContainerO
           desiredState: "running",
           updatedAt: Date.now(),
           stopHistory: existing?.stopHistory ?? [],
-          isBaseline: isBaselineContainer(name),
+          isMinReplicaSet: isMinReplicaSetContainer(name),
         }
 
         containers.set(name, nextRecord)
@@ -331,8 +334,8 @@ export const makeContainerService = <TEnv extends ManagedContainerEnv<ContainerO
           return yield* Effect.fail(ContainerNotFoundError.of(name))
         }
 
-        if (record.isBaseline) {
-          return yield* Effect.fail(BaselineContainerError.of(name))
+        if (record.isMinReplicaSet) {
+          return yield* Effect.fail(MinReplicaSetContainerError.of(name))
         }
 
         if (record.desiredState !== "stopped") {

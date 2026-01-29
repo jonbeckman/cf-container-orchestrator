@@ -1,5 +1,5 @@
 /**
- * Baseline Fleet Configuration
+ * Min Replica Set Configuration
  *
  * Defines containers that should be automatically managed by the operator.
  * These containers are reconciled on startup and via periodic alarms.
@@ -23,7 +23,7 @@ export const ContainerUserConfig = Schema.Record({
 export type ContainerUserConfig = typeof ContainerUserConfig.Type
 
 /**
- * Specification for a single container in the baseline fleet.
+ * Specification for a single container in the min replica set.
  */
 export const ContainerSpec = Schema.Struct({
   /** Unique name for this container (used as DO ID) */
@@ -36,10 +36,10 @@ export const ContainerSpec = Schema.Struct({
 export type ContainerSpec = typeof ContainerSpec.Type
 
 /**
- * Array of container specifications forming the baseline fleet.
+ * Array of container specifications forming the min replica set.
  */
-export const BaselineFleetConfig = Schema.Array(ContainerSpec)
-export type BaselineFleetConfig = typeof BaselineFleetConfig.Type
+export const MinReplicaSetConfig = Schema.Array(ContainerSpec)
+export type MinReplicaSetConfig = typeof MinReplicaSetConfig.Type
 
 // ============================================================================
 // Helpers

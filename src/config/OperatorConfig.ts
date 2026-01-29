@@ -5,7 +5,7 @@
  * Users provide this when creating an operator instance.
  */
 
-import type { BaselineFleetConfig, ContainerSpec } from "./BaselineFleetConfig"
+import type { MinReplicaSetConfig, ContainerSpec } from "./MinReplicaSetConfig"
 import type { RestartPolicy } from "./RestartPolicy"
 
 // ============================================================================
@@ -43,7 +43,7 @@ export interface OperatorConfig<TEnv> {
    * Array of container specs to auto-manage.
    * These containers are reconciled on startup and via periodic alarms.
    */
-  baselineFleet: BaselineFleetConfig
+  minReplicaSet: MinReplicaSetConfig
 
   /**
    * Function to build environment variables for container processes.
@@ -59,14 +59,14 @@ export interface OperatorConfig<TEnv> {
   containerNameEnvKey?: string
 
   /**
-   * How often to check and reconcile the baseline fleet (ms).
+   * How often to check and reconcile the min replica set (ms).
    * Set to 0 to disable periodic reconciliation.
    * @default 60000 (1 minute)
    */
   reconcileIntervalMs?: number
 
   /**
-   * Whether to allow ad-hoc containers (not in baseline fleet) to be created.
+   * Whether to allow ad-hoc containers (not in min replica set) to be created.
    * @default true
    */
   allowAdHocContainers?: boolean
@@ -82,7 +82,7 @@ export interface OperatorConfig<TEnv> {
  * Resolved operator config with all defaults applied.
  */
 export interface ResolvedOperatorConfig<TEnv> {
-  baselineFleet: BaselineFleetConfig
+  minReplicaSet: MinReplicaSetConfig
   envVarsBuilder: EnvVarsBuilder<TEnv>
   containerNameEnvKey: string
   reconcileIntervalMs: number
@@ -96,7 +96,7 @@ export interface ResolvedOperatorConfig<TEnv> {
 export const resolveOperatorConfig = <TEnv>(
   config: OperatorConfig<TEnv>,
 ): ResolvedOperatorConfig<TEnv> => ({
-  baselineFleet: config.baselineFleet,
+  minReplicaSet: config.minReplicaSet,
   envVarsBuilder: config.envVarsBuilder,
   containerNameEnvKey: config.containerNameEnvKey ?? DEFAULT_CONTAINER_NAME_ENV_KEY,
   reconcileIntervalMs: config.reconcileIntervalMs ?? DEFAULT_RECONCILE_INTERVAL_MS,

@@ -58,16 +58,16 @@ export class ContainerNotStoppedError extends Data.TaggedError("ContainerNotStop
 }
 
 /**
- * Container cannot be removed because it's part of the baseline fleet.
+ * Container cannot be removed because it's part of the min replica set.
  */
-export class BaselineContainerError extends Data.TaggedError("BaselineContainerError")<{
+export class MinReplicaSetContainerError extends Data.TaggedError("MinReplicaSetContainerError")<{
   readonly name: string
   readonly message: string
 }> {
-  static of(name: string): BaselineContainerError {
-    return new BaselineContainerError({
+  static of(name: string): MinReplicaSetContainerError {
+    return new MinReplicaSetContainerError({
       name,
-      message: `Cannot remove baseline container: ${name}`,
+      message: `Cannot remove min replica set container: ${name}`,
     })
   }
 }
@@ -84,7 +84,7 @@ export class AdHocContainerNotAllowedError extends Data.TaggedError(
   static of(name: string): AdHocContainerNotAllowedError {
     return new AdHocContainerNotAllowedError({
       name,
-      message: `Ad-hoc containers not allowed. Container ${name} is not in baseline fleet.`,
+      message: `Ad-hoc containers not allowed. Container ${name} is not in min replica set.`,
     })
   }
 }
@@ -130,7 +130,7 @@ export type ContainerError =
   | ContainerNotFoundError
   | CrashLoopDetectedError
   | ContainerNotStoppedError
-  | BaselineContainerError
+  | MinReplicaSetContainerError
   | AdHocContainerNotAllowedError
   | ContainerStartError
   | ContainerStopError

@@ -25,8 +25,8 @@ export interface ContainerRecord {
   updatedAt: number
   /** Stop history for crash loop detection (most recent last) */
   stopHistory: StopRecord[]
-  /** Whether this container is part of the baseline fleet */
-  isBaseline: boolean
+  /** Whether this container is part of the min replica set */
+  isMinReplicaSet: boolean
 }
 
 /**
@@ -58,7 +58,7 @@ export const createContainerRecord = (
   name: string,
   config: Record<string, unknown>,
   restartPolicy: RestartPolicy,
-  isBaseline: boolean,
+  isMinReplicaSet: boolean,
   existingStopHistory: StopRecord[] = [],
 ): ContainerRecord => ({
   name,
@@ -67,5 +67,5 @@ export const createContainerRecord = (
   desiredState: "running",
   updatedAt: Date.now(),
   stopHistory: existingStopHistory,
-  isBaseline,
+  isMinReplicaSet,
 })

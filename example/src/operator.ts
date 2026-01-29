@@ -10,10 +10,10 @@ import { DEFAULT_SERVICE_CONFIG, type ServiceConfig, type ServiceEnv } from "./t
 interface OperatorEnv extends ContainerOperatorEnv, ServiceEnv {}
 
 /**
- * Define the baseline fleet.
+ * Define the min replica set.
  * These containers will be automatically started and monitored.
  */
-const baselineFleet: ContainerSpec[] = [
+const minReplicaSet: ContainerSpec[] = [
   // Example 1: Uses mostly defaults
   {
     name: "core-processor-1",
@@ -76,9 +76,9 @@ const envVarsBuilder = (spec: ContainerSpec, env: OperatorEnv) => {
  * Create the Operator Class
  */
 export const ServiceOperator = createContainerOperator<OperatorEnv>({
-  baselineFleet,
+  minReplicaSet,
   envVarsBuilder,
   containerNameEnvKey: "SERVICE_NAME",
-  reconcileIntervalMs: 60_000, // Check fleet health every 60 seconds
+  reconcileIntervalMs: 60_000, // Check replica set health every 60 seconds
   allowAdHocContainers: true, // Allow starting temporary/dynamic containers via API
 })

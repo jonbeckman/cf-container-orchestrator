@@ -12,10 +12,10 @@ The application consists of:
 
 ## Key Concepts Demonstrated
 
-- **Baseline Fleet**: We define 3 services (`core-processor-1`, `core-processor-2`, `backup-processor`) that should _always_ be running.
-- **Config Overrides**: Each service in the fleet uses `DEFAULT_SERVICE_CONFIG` but overrides specific fields (like `logLevel` or `mode`).
+- **Min Replica Set**: We define 3 services (`core-processor-1`, `core-processor-2`, `backup-processor`) that should _always_ be running.
+- **Config Overrides**: Each service in the replica set uses `DEFAULT_SERVICE_CONFIG` but overrides specific fields (like `logLevel` or `mode`).
 - **Env Var Mapping**: The `envVarsBuilder` function transforms the typed config object into Environment Variables that the container receives.
-- **Ad-Hoc Containers**: The API allows starting new, dynamic containers (e.g., `GET /start/temp-worker`) that aren't in the baseline fleet.
+- **Ad-Hoc Containers**: The API allows starting new, dynamic containers (e.g., `GET /start/temp-worker`) that aren't in the min replica set.
 
 ## Project Structure
 
@@ -65,7 +65,7 @@ The application consists of:
   curl https://<your-worker>.workers.dev/stop/core-processor-1
   ```
 
-  _Note_: Since `core-processor-1` is in the **baseline fleet**, the operator will automatically restart it in the next reconciliation cycle (30s).
+  _Note_: Since `core-processor-1` is in the **min replica set**, the operator will automatically restart it in the next reconciliation cycle (30s).
 
 - **Force Reconciliation**:
   ```bash
@@ -77,7 +77,7 @@ The application consists of:
 ### Configuration Overrides (`src/operator.ts`)
 
 ```typescript
-const baselineFleet: ContainerSpec[] = [
+const minReplicaSet: ContainerSpec[] = [
   {
     name: "core-processor-1",
     config: {

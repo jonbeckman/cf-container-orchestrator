@@ -2,7 +2,7 @@
  * Container Operator
  *
  * A generic Cloudflare Containers operator with:
- * - Configurable baseline fleet with auto-reconciliation
+ * - Configurable min replica set with auto-reconciliation
  * - Restart policies with crash loop protection
  * - Effect-based typed errors and services
  *
@@ -22,7 +22,7 @@
  *
  * // 2. Create the operator with your configuration
  * export const ContainerOperator = createContainerOperator({
- *   baselineFleet: [
+ *   minReplicaSet: [
  *     {
  *       name: "default",
  *       config: { myConfigKey: "value" },
@@ -62,10 +62,10 @@ export {
 
 export {
   alwaysRestartPolicy,
-  BaselineFleetConfig,
+  MinReplicaSetConfig,
   ContainerSpec,
   type ContainerStartConfig,
-  // Baseline Fleet
+  // Min Replica Set
   ContainerUserConfig,
   CrashHandlingPolicy,
   createContainerSpec,
@@ -119,7 +119,7 @@ export {
 
 export {
   AdHocContainerNotAllowedError,
-  BaselineContainerError,
+  MinReplicaSetContainerError,
   type ContainerError,
   // Container Errors
   ContainerNotFoundError,

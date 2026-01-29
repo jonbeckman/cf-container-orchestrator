@@ -4,7 +4,7 @@
 
 export {
   AdHocContainerNotAllowedError,
-  BaselineContainerError,
+  MinReplicaSetContainerError,
   type ContainerError,
   ContainerNotFoundError,
   ContainerNotStoppedError,

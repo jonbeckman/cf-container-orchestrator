@@ -1,12 +1,12 @@
 /**
  * Reconcile Service
  *
- * Effect service for baseline fleet reconciliation.
- * Ensures all baseline containers match their desired state.
+ * Effect service for min replica set reconciliation.
+ * Ensures all min replica set containers match their desired state.
  */
 
 import { Context, Effect } from "effect"
-import type { BaselineFleetConfig } from "../config/BaselineFleetConfig"
+import type { MinReplicaSetConfig } from "../config/MinReplicaSetConfig"
 import { PartialReconcileError, ReconcileError } from "../errors/ReconcileErrors"
 import type { ContainerRecord } from "../types/ContainerRecord"
 import type { ContainerService } from "./ContainerService"
@@ -21,8 +21,8 @@ import type { ContainerService } from "./ContainerService"
 export interface ReconcileServiceContext {
   /** Container service for operations */
   containerService: ContainerService
-  /** Baseline fleet configuration */
-  baselineFleet: BaselineFleetConfig
+  /** Min replica set configuration */
+  minReplicaSet: MinReplicaSetConfig
   /** Container registry */
   containers: Map<string, ContainerRecord>
   /** Save containers to storage */
@@ -46,8 +46,8 @@ export interface ReconcileResult {
  */
 export interface ReconcileService {
   /**
-   * Reconcile baseline fleet.
-   * Ensures all baseline containers are running and healthy.
+   * Reconcile min replica set.
+   * Ensures all min replica set containers are running and healthy.
    */
   reconcile(): Effect.Effect<ReconcileResult, ReconcileError | PartialReconcileError>
 
@@ -74,13 +74,13 @@ export class ReconcileServiceTag extends Context.Tag("ReconcileService")<
  * Create ReconcileService implementation.
  */
 export const makeReconcileService = (ctx: ReconcileServiceContext): ReconcileService => {
-  const { containerService, baselineFleet, containers } = ctx
+  const { containerService, minReplicaSet, containers } = ctx
 
   return {
     reconcile: () =>
       Effect.gen(function* () {
         console.log(
-          `[ReconcileService] Starting reconciliation for ${baselineFleet.length} baseline containers`,
+          `[ReconcileService] Starting reconciliation for ${minReplicaSet.length} min replica set containers`,
         )
 
         const result: ReconcileResult = {
@@ -89,8 +89,8 @@ export const makeReconcileService = (ctx: ReconcileServiceContext): ReconcileSer
           failed: [],
         }
 
-        // Process each baseline container
-        for (const spec of baselineFleet) {
+        // Process each min replica set container
+        for (const spec of minReplicaSet) {
           const record = containers.get(spec.name)
 
           // Check if container exists and is healthy
@@ -150,7 +150,9 @@ export const makeReconcileService = (ctx: ReconcileServiceContext): ReconcileSer
         // Report complete failure
         if (result.failed.length > 0 && result.started === 0 && result.alreadyHealthy === 0) {
           return yield* Effect.fail(
-            ReconcileError.of(`All ${result.failed.length} baseline containers failed to start`),
+            ReconcileError.of(
+              `All ${result.failed.length} min replica set containers failed to start`,
+            ),
           )
         }
 
@@ -159,7 +161,7 @@ export const makeReconcileService = (ctx: ReconcileServiceContext): ReconcileSer
 
     needsReconcile: () =>
       Effect.gen(function* () {
-        for (const spec of baselineFleet) {
+        for (const spec of minReplicaSet) {
           const record = containers.get(spec.name)
 
           // Skip if user explicitly stopped it
