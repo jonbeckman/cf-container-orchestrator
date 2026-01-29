@@ -1,6 +1,6 @@
 # cf-container-orchestrator
 
-A generic Cloudflare Containers operator with fleet management, restart policies, and crash loop protection. Built with [Effect-TS](https://effect.website).
+Orchestrate Cloudflare Containers with min replica sets, restart policies, crash loop protection, and more. Built with [Effect-TS](https://effect.website).
 
 ## Features
 
@@ -23,7 +23,7 @@ In practice, that means:
 
 - High Availability: Enforcing a "min replica set" of services that must always be running (with automatic restarts and crash-loop protection).
 - Dynamic Configuration: Injecting specific secrets and configuration into each container instance at runtime.
-- Lifecycle Management: Starting, stopping, and restarting containers as needed. I wrapped this into an API to call remotely.
+- Lifecycle Management: Starting, stopping, and restarting containers as needed.
 
 For a complete guide on how to integrate and use the library, check out the [Example Guide](./example/README.md).
 
